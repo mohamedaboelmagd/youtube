@@ -1,0 +1,40 @@
+<table *ngIf="channel$ | async as channel">
+  <thead>
+    <tr>
+      <td></td>
+      <td>Title</td>
+      <td>Publish Date</td>
+      <td></td>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let video of channel?.videos">
+      <td><img [src]="video?.imgURL" /></td>
+      <td>{{ video?.title }}</td>
+      <td>{{ video?.publishedAt | date }}</td>
+      <td>
+        <button type="button" [routerLink]="['/', video?.id]">Details</button>
+      </td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td>
+        <button
+          *ngIf="channel?.prevPageToken"
+          type="button"
+          (click)="loadPrevious(channel)"
+        >
+          Prev
+        </button>
+        <button
+          *ngIf="channel?.nextPageToken"
+          type="button"
+          (click)="loadNext(channel)"
+        >
+          Next
+        </button>
+      </td>
+    </tr>
+  </tfoot>
+</table>

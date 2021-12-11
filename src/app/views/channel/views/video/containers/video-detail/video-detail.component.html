@@ -1,0 +1,20 @@
+<div *ngIf="video$ | async as video">
+  <img [src]="video.imgUrl" />
+  <div>
+    <h3>{{ video?.title }}</h3>
+    <button type="button">Add to favorite</button>
+  </div>
+  <div>
+    <div class="rate">
+      <p>Rate now</p>
+      <input type="number" min="1" max="5" />
+    </div>
+    <p>Duration {{ video?.duration }}</p>
+    <div>
+      <p>views {{ video?.viewCount }}</p>
+      <p>likes {{ video?.likeCount }}</p>
+    </div>
+  </div>
+  <h5>Published on {{ video.publishedAt | date }}</h5>
+  <p>{{ video.description }}</p>
+</div>

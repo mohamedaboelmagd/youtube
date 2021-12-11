@@ -1,10 +1,22 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { ExtraOptions, RouterModule, Routes } from '@angular/router';
 
-const routes: Routes = [];
+export const routingConfiguration: ExtraOptions = {
+  paramsInheritanceStrategy: 'always',
+};
+
+const routes: Routes = [
+  {
+    path: '',
+    loadChildren: () =>
+      import('./views/channel/channel.module').then(
+        (module) => module.ChannelModule
+      ),
+  },
+];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  imports: [RouterModule.forRoot(routes, routingConfiguration)],
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}
