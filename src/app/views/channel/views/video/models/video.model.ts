@@ -70,7 +70,7 @@ export interface IVideoResponse {
 export interface IVideo {
   id: string;
   title: string;
-  publishedAt: Date;
+  publishedAt: number;
   duration: string;
   likeCount: string;
   viewCount: string;

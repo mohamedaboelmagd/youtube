@@ -26,7 +26,8 @@ export interface IChannelItemResponse {
   etag: string;
   id: {
     kind: string;
-    videoId: string;
+    videoId?: string;
+    playlistId?: string;
   };
   snippet: IChannelSnippet;
 }

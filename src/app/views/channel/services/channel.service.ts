@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { from, Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GOOGLE_APIS } from 'src/app/constant';
 import { environment } from 'src/environments/environment';
@@ -19,7 +20,49 @@ import * as fromModels from '../models';
 
 @Injectable()
 export class ChannelService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private afs: AngularFirestore) { }
+
+  loadChannelList(channelId: string, pageToken?: string): Observable<fromModels.IChannelList> {
+    if (pageToken) {
+      return this.afs
+        .doc<fromModels.IChannelList>(`channel/${channelId}/pageToken/${pageToken}`)
+        .snapshotChanges()
+        .pipe(
+          map((snap) => snap.payload.data() as fromModels.IChannelList)
+        );
+    }
+    return this.afs
+      .doc<fromModels.IChannelList>(`channel/${channelId}`)
+      .snapshotChanges()
+      .pipe(
+        map((snap) => snap.payload.data() as fromModels.IChannelList)
+      );
+  }
+
+  exists(channelId: string, pageToken?: string): Observable<boolean> {
+    if (pageToken) {
+      return this.afs
+        .doc<fromModels.IChannelList>(`channel/${channelId}/pageToken/${pageToken}`)
+        .snapshotChanges()
+        .pipe(map((snap) => snap.payload.exists));
+    }
+    return this.afs
+      .doc<fromModels.IChannelList>(`channel/${channelId}`)
+      .snapshotChanges()
+      .pipe(map((snap) => snap.payload.exists));
+  }
+
+  addItem(id: string, channel: fromModels.IChannelList, pageToken?: string): Observable<void> {
+    console.log(id, channel, pageToken)
+    if (pageToken) {
+      return from(
+        this.afs.collection<fromModels.IChannelList>('channel').doc(id).collection('pageToken').doc(pageToken).set(channel)
+      );
+    }
+    return from(
+      this.afs.collection<fromModels.IChannelList>('channel').doc(id).set(channel)
+    );
+  }
 
   private getURL(id: string, pageToken?: string, title?: string): string {
     // sort -> order=date& title
@@ -27,8 +70,7 @@ export class ChannelService {
     return (
       `${GOOGLE_APIS}/search?order=date&pageToken=` +
       (pageToken != null ? pageToken : '') +
-      `&part=snippet&maxResults=5&channelId=${id}&q=${title || ''}&key=${
-        environment.firebaseConfig.apiKey
+      `&part=snippet&maxResults=5&channelId=${id}&q=${title || ''}&key=${environment.firebaseConfig.apiKey
       }`
     );
   }
@@ -48,12 +90,12 @@ export class ChannelService {
             id: id,
             total: res.pageInfo.totalResults,
             pages: Math.floor((res.pageInfo.totalResults - 1) / 5) + 1,
-            nextPageToken: res.nextPageToken,
-            prevPageToken: res?.prevPageToken,
+            nextPageToken: res?.nextPageToken || null,
+            prevPageToken: res?.prevPageToken || null,
             videos: res.items.map((item: fromModels.IChannelItemResponse) => {
               return {
-                id: item.id.videoId,
-                publishedAt: new Date(item.snippet.publishedAt),
+                id: item.id?.videoId || item.id?.playlistId || null,
+                publishedAt: new Date(item.snippet.publishedAt).getTime(),
                 title: item.snippet.title,
                 description: item.snippet.description,
                 imgURL: item.snippet.thumbnails.medium.url,

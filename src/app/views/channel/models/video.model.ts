@@ -1,6 +1,6 @@
 export interface IVideo {
   id: string;
-  publishedAt: Date;
+  publishedAt: number;
   title: string;
   description: string;
   imgURL: string;
