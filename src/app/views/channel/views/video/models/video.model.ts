@@ -78,4 +78,5 @@ export interface IVideo {
   imgUrl: string;
 
   isFavorite?: boolean;
+  rating?: number;
 }
