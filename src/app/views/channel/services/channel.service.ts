@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { from, Observable, throwError } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { first, map } from 'rxjs/operators';
 import { GOOGLE_APIS } from 'src/app/constant';
 import { environment } from 'src/environments/environment';
 
@@ -22,45 +22,41 @@ import * as fromModels from '../models';
 export class ChannelService {
   constructor(private http: HttpClient, private afs: AngularFirestore) { }
 
-  loadChannelList(channelId: string, pageToken?: string): Observable<fromModels.IChannelList> {
-    if (pageToken) {
-      return this.afs
-        .doc<fromModels.IChannelList>(`channel/${channelId}/pageToken/${pageToken}`)
-        .snapshotChanges()
-        .pipe(
-          map((snap) => snap.payload.data() as fromModels.IChannelList)
-        );
-    }
-    return this.afs
-      .doc<fromModels.IChannelList>(`channel/${channelId}`)
-      .snapshotChanges()
-      .pipe(
-        map((snap) => snap.payload.data() as fromModels.IChannelList)
-      );
+  loadChannelList(
+    channelId: string,
+    pageToken?: string
+  ): Observable<fromModels.IChannelList> {
+    return (
+      this.afs
+        .doc<fromModels.IChannelList>(
+          pageToken
+            ? `channel/${channelId}/pageToken/${pageToken}`
+            : `channel/${channelId}`
+        )
+        .valueChanges() as Observable<fromModels.IChannelList>
+    ).pipe(first());
   }
 
   exists(channelId: string, pageToken?: string): Observable<boolean> {
-    if (pageToken) {
-      return this.afs
-        .doc<fromModels.IChannelList>(`channel/${channelId}/pageToken/${pageToken}`)
-        .snapshotChanges()
-        .pipe(map((snap) => snap.payload.exists));
-    }
     return this.afs
-      .doc<fromModels.IChannelList>(`channel/${channelId}`)
+      .doc<fromModels.IChannelList>(
+        pageToken
+          ? `channel/${channelId}/pageToken/${pageToken}`
+          : `channel/${channelId}`
+      )
       .snapshotChanges()
-      .pipe(map((snap) => snap.payload.exists));
+      .pipe(map((snap) => snap.payload.exists), first());
   }
 
-  addItem(id: string, channel: fromModels.IChannelList, pageToken?: string): Observable<void> {
-    console.log(id, channel, pageToken)
-    if (pageToken) {
-      return from(
-        this.afs.collection<fromModels.IChannelList>('channel').doc(id).collection('pageToken').doc(pageToken).set(channel)
-      );
-    }
+  addItem(
+    id: string,
+    channel: fromModels.IChannelList,
+    pageToken?: string
+  ): Observable<void> {
     return from(
-      this.afs.collection<fromModels.IChannelList>('channel').doc(id).set(channel)
+      this.afs
+        .doc<fromModels.IChannelList>(pageToken ? `channel/${id}/pageToken/${pageToken}` : `channel/${id}`)
+        .set(channel)
     );
   }
 

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { first, map } from 'rxjs/operators';
 import { GOOGLE_APIS } from 'src/app/constant';
 import { environment } from 'src/environments/environment';
 
@@ -13,14 +13,11 @@ export class VideoService {
   constructor(private http: HttpClient, private afs: AngularFirestore) { }
 
   loadVideo(videoId: string): Observable<fromModels.IVideo> {
-    return this.afs
+    return (this.afs
       .doc<fromModels.IVideo>(`videos/${videoId}`)
-      .snapshotChanges()
+      .valueChanges() as Observable<fromModels.IVideo>)
       .pipe(
-        map((snap) => {
-          const data = snap.payload.data() as fromModels.IVideo;
-          return { ...data }; // , id: snap.payload.id
-        })
+        first()
       );
   }
 
@@ -28,7 +25,7 @@ export class VideoService {
     return this.afs
       .doc<fromModels.IVideo>(`videos/${videoId}`)
       .snapshotChanges()
-      .pipe(map((snap) => snap.payload.exists));
+      .pipe(map((snap) => snap.payload.exists), first());
   }
 
   updateVideo(id: string, item: fromModels.IVideo): Observable<void> {

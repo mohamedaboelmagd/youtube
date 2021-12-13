@@ -12,7 +12,7 @@
       <td><img [src]="video?.imgURL" /></td>
       <td>{{ video?.title }}</td>
       <td>{{ video?.publishedAt | date }}</td>
-      <td>
+      <td *ngIf="video?.id">
         <button type="button" [routerLink]="['/', video?.id]">Details</button>
       </td>
     </tr>
