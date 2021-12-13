@@ -16,15 +16,13 @@ export class ChannelService {
     channelId: string,
     pageToken?: string
   ): Observable<fromModels.IChannelList> {
-    return (
-      this.afs
-        .doc<fromModels.IChannelList>(
-          pageToken
-            ? `channel/${channelId}/pageToken/${pageToken}`
-            : `channel/${channelId}`
-        )
-        .valueChanges() as Observable<fromModels.IChannelList>
-    ).pipe(first());
+    return this.afs
+      .doc<fromModels.IChannelList>(
+        pageToken
+          ? `channel/${channelId}/pageToken/${pageToken}`
+          : `channel/${channelId}`
+      )
+      .valueChanges() as Observable<fromModels.IChannelList>;
   }
 
   exists(channelId: string, pageToken?: string): Observable<boolean> {
@@ -36,8 +34,8 @@ export class ChannelService {
       )
       .snapshotChanges()
       .pipe(
-        map((snap) => snap.payload.exists),
-        first()
+        map((snap) => snap.payload.exists)
+        // first()
       );
   }
 

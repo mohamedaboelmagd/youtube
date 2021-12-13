@@ -10,19 +10,19 @@ import * as fromModels from '../models';
 
 @Injectable()
 export class VideoService {
-  constructor(private http: HttpClient, private afs: AngularFirestore) { }
+  constructor(private http: HttpClient, private afs: AngularFirestore) {}
 
   loadVideo(videoId: string): Observable<fromModels.IVideo> {
-    return (this.afs
+    return this.afs
       .doc<fromModels.IVideo>(`videos/${videoId}`)
-      .valueChanges() as Observable<fromModels.IVideo>);
+      .valueChanges() as Observable<fromModels.IVideo>;
   }
 
   exists(videoId: string): Observable<boolean> {
     return this.afs
       .doc<fromModels.IVideo>(`videos/${videoId}`)
       .snapshotChanges()
-      .pipe(map((snap) => snap.payload.exists), first());
+      .pipe(map((snap) => snap.payload.exists));
   }
 
   updateVideo(id: string, item: Partial<fromModels.IVideo>): Observable<void> {

@@ -1,3 +1,30 @@
+# uses this channel Id
+
+UCx4a8EMmXx-6RuJlyAKASoQ
+UCXVDBeCwro9FqNeBr41Q2BQ
+UCee3jrGUdb2ovrE7v4ncH3Q
+UC-1l0Ew_jMorWJ0d9RWk5wg
+UC_x5XG1OV2P6uZZ5FSM9Ttw
+UUTI5S0PqpgB0DbYgcgRU6QQ
+
+# lazy loaded modules
+
+> channel.module
+
+    1. check channel Id exist in firestore already or not
+        it exists, loading it from firestore will work.
+        if not, load it using Google youtube API.
+    2. what do I save in firestore?
+        only first pages and each pageToken.
+        not save the response of sort request or find per title.
+
+> > video.module
+
+    1. check video Id exist in firestore already or not
+        it exists, loading it from firestore will work.
+        if not, load it using Google youtube API
+    2. toggle favorite and set rating to this document
+
 # Inmobly
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 11.0.7.
@@ -13,14 +40,6 @@ Run `ng generate component component-name` to generate a new component. You can 
 ## Build
 
 Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
 
 ## Further help
 

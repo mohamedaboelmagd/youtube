@@ -33,19 +33,12 @@ export class VideoDetailComponent implements OnInit, OnDestroy {
     private videoService: fromServices.VideoService,
     private fb: FormBuilder
   ) {
-    // this.rating3 = 0;
     this.form = this.fb.group({
       rating: ['', Validators.required],
     });
   }
 
   ngOnInit(): void {
-    // this.video$ = this.activatedRoute.paramMap.pipe(
-    //   filter((videoId) => !!videoId),
-    //   switchMap((params) =>
-    //     this.videoService.getVideo(params?.get('videoId') as string)
-    //   )
-    // );
     const videoId = this.activatedRoute.snapshot.paramMap?.get(
       'videoId'
     ) as string;
@@ -79,8 +72,6 @@ export class VideoDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    //Called once, before the instance is destroyed.
-    //Add 'implements OnDestroy' to the class.
     this.subscription?.unsubscribe();
   }
 
@@ -88,6 +79,10 @@ export class VideoDetailComponent implements OnInit, OnDestroy {
     const videoId = this.activatedRoute.snapshot.paramMap?.get(
       'videoId'
     ) as string;
-    this.videoService.updateVideo(videoId, { isFavorite: !this.isFav });
+    this.subscription.add(
+      this.videoService
+        .updateVideo(videoId, { isFavorite: !this.isFav })
+        .subscribe()
+    );
   }
 }

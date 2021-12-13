@@ -22,7 +22,7 @@ import * as fromServices from '../../services';
 export class ChannelHomeComponent implements OnInit, OnDestroy {
   form: FormGroup;
 
-  channelId: string = 'UCx4a8EMmXx-6RuJlyAKASoQ';
+  channelId: string = 'UC_x5XG1OV2P6uZZ5FSM9Ttw';
 
   pending: boolean = false;
   error: boolean;
@@ -58,14 +58,6 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // this.channel$ = this.channelService.loadChannel('UC_x5XG1OV2P6uZZ5FSM9Ttw');
-
-    // this.channelId = 'UCx4a8EMmXx-6RuJlyAKASoQ';
-    // 'UCXVDBeCwro9FqNeBr41Q2BQ'
-    //'UCee3jrGUdb2ovrE7v4ncH3Q'
-    // 'UC-1l0Ew_jMorWJ0d9RWk5wg';
-    // UC_x5XG1OV2P6uZZ5FSM9Ttw;
-    // UUTI5S0PqpgB0DbYgcgRU6QQ;
     this.search();
     this.subscription.add(
       this.filterControl?.valueChanges
@@ -80,6 +72,7 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
 
   search() {
     this.pending = true;
+    this.error = false;
     this.subscription.add(
       this.channelService
         .exists(this.channelId)
@@ -98,6 +91,11 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
             this.dataSource = new MatTableDataSource(channel.videos);
             this.channel = channel;
             this.pending = false;
+          }),
+          catchError((err) => {
+            this.pending = false;
+            this.error = true;
+            throw err;
           })
         )
         .subscribe()
@@ -118,7 +116,6 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
   ) {
     this.pending = true;
     this.error = false;
-    // if (this.playlist) {
     const pageToken =
       direction === fromModels.PageDirection.NEXT
         ? channel.nextPageToken
@@ -172,6 +169,11 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
             this.dataSource = new MatTableDataSource(channel.videos);
             this.channel = channel;
             this.pending = false;
+          }),
+          catchError((err) => {
+            this.pending = false;
+            this.error = true;
+            throw err;
           })
         )
         .subscribe()
@@ -190,6 +192,11 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
             this.dataSource = new MatTableDataSource(channel.videos);
             this.channel = channel;
             this.pending = false;
+          }),
+          catchError((err) => {
+            this.pending = false;
+            this.error = true;
+            throw err;
           })
         )
         .subscribe()
