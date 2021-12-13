@@ -15,10 +15,7 @@ export class VideoService {
   loadVideo(videoId: string): Observable<fromModels.IVideo> {
     return (this.afs
       .doc<fromModels.IVideo>(`videos/${videoId}`)
-      .valueChanges() as Observable<fromModels.IVideo>)
-      .pipe(
-        first()
-      );
+      .valueChanges() as Observable<fromModels.IVideo>);
   }
 
   exists(videoId: string): Observable<boolean> {
@@ -28,7 +25,7 @@ export class VideoService {
       .pipe(map((snap) => snap.payload.exists), first());
   }
 
-  updateVideo(id: string, item: fromModels.IVideo): Observable<void> {
+  updateVideo(id: string, item: Partial<fromModels.IVideo>): Observable<void> {
     return from(this.afs.doc<fromModels.IVideo>(`videos/${id}`).update(item));
   }
 

@@ -3,7 +3,9 @@
   <img [src]="video.imgUrl" />
   <div>
     <h3>{{ video?.title }}</h3>
-    <button type="button">Add to favorite</button>
+    <button type="button" (click)="toggleFav()">
+      {{ !video?.isFavorite ? "Add to favorite" : "dislike" }}
+    </button>
   </div>
   <div>
     <div class="rate">

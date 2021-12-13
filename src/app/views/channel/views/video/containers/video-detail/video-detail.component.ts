@@ -13,6 +13,7 @@ import * as fromServices from '../../services';
 })
 export class VideoDetailComponent implements OnInit {
   video$: Observable<fromModels.IVideo>;
+  isFav = false;
   constructor(
     private activatedRoute: ActivatedRoute,
     private videoService: fromServices.VideoService
@@ -39,7 +40,15 @@ export class VideoDetailComponent implements OnInit {
             tap((res) => this.videoService.addItem(videoId, res))
           );
         }
-      })
+      }),
+      tap(video => this.isFav = video?.isFavorite || false)
     );
+  }
+
+  toggleFav() {
+    const videoId = this.activatedRoute.snapshot.paramMap?.get(
+      'videoId'
+    ) as string;
+    this.videoService.updateVideo(videoId, { isFavorite: !this.isFav })
   }
 }
