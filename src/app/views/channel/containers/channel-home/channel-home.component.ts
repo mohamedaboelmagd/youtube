@@ -22,7 +22,7 @@ import * as fromServices from '../../services';
 export class ChannelHomeComponent implements OnInit, OnDestroy {
   form: FormGroup;
 
-  channelId: string;
+  channelId: string = 'UCx4a8EMmXx-6RuJlyAKASoQ';
 
   pending: boolean = false;
   error: boolean;
@@ -60,20 +60,31 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // this.channel$ = this.channelService.loadChannel('UC_x5XG1OV2P6uZZ5FSM9Ttw');
 
-    this.channelId = 'UCx4a8EMmXx-6RuJlyAKASoQ';
+    // this.channelId = 'UCx4a8EMmXx-6RuJlyAKASoQ';
     // 'UCXVDBeCwro9FqNeBr41Q2BQ'
     //'UCee3jrGUdb2ovrE7v4ncH3Q'
     // 'UC-1l0Ew_jMorWJ0d9RWk5wg';
     // UC_x5XG1OV2P6uZZ5FSM9Ttw;
     // UUTI5S0PqpgB0DbYgcgRU6QQ;
+    this.search();
+    this.subscription.add(
+      this.filterControl?.valueChanges
+        ?.pipe(debounceTime(1000))
+        .subscribe((filter) => this.applyFilter(filter))
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
+  }
+
+  search() {
     this.pending = true;
     this.subscription.add(
       this.channelService
         .exists(this.channelId)
         .pipe(
-          // take(1),
           switchMap((exist) => {
-            console.log(exist);
             if (exist) {
               return this.channelService.loadChannelList(this.channelId);
             } else {
@@ -91,15 +102,6 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
         )
         .subscribe()
     );
-    this.subscription.add(
-      this.filterControl?.valueChanges
-        ?.pipe(debounceTime(1000))
-        .subscribe((filter) => this.applyFilter(filter))
-    );
-  }
-
-  ngOnDestroy(): void {
-    this.subscription?.unsubscribe();
   }
 
   loadPrevious(channel: fromModels.IChannelList) {
@@ -126,7 +128,6 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
         .exists(channel?.id, pageToken)
         .pipe(
           switchMap((exist) => {
-            console.log(exist);
             if (exist) {
               return this.channelService.loadChannelList(channel.id, pageToken);
             } else {
@@ -144,7 +145,6 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
             this.pending = false;
           }),
           catchError((err) => {
-            console.log(err);
             this.pending = false;
             this.error = true;
             throw err;
@@ -179,6 +179,8 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
   }
 
   applyFilter(filterValue: string) {
+    this.pending = true;
+    this.error = false;
     filterValue = filterValue?.trim()?.toLowerCase();
     this.subscription.add(
       this.channelService

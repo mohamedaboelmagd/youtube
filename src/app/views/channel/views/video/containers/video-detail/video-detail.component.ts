@@ -51,7 +51,6 @@ export class VideoDetailComponent implements OnInit, OnDestroy {
     ) as string;
     this.video$ = this.videoService.exists(videoId).pipe(
       switchMap((exist) => {
-        console.log(exist);
         if (exist) {
           return this.videoService.loadVideo(videoId);
         } else {

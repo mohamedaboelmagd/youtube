@@ -1,0 +1,72 @@
+nav {
+  background: whitesmoke;
+  box-shadow: 0 0 2px gray;
+  margin-bottom: 10px;
+}
+
+.video {
+  &__img {
+    display: block;
+    margin: auto;
+  }
+  &__header {
+    display: flex;
+    padding: 0 20px;
+    h4 {
+      font-weight: 500;
+    }
+    button {
+      margin: auto;
+      margin-right: 0;
+    }
+  }
+  &__statistics {
+    display: flex;
+    padding: 0 20px;
+    &__rate {
+      display: flex;
+      ::ng-deep label.star {
+        padding: 3px;
+        font-size: 20px;
+        cursor: pointer;
+      }
+      form {
+        margin: auto 10px;
+      }
+    }
+    &__duration {
+      margin: auto;
+    }
+    &__count {
+      display: flex;
+      margin-left: auto;
+      p {
+        margin: auto;
+        display: flex;
+        align-items: center;
+        margin-left: 20px;
+        mat-icon {
+          margin-right: 5px;
+        }
+      }
+    }
+  }
+  &__description {
+    display: flex;
+    flex-direction: column;
+    padding: 0 20px;
+    h5 {
+      font-weight: 500;
+      color: red;
+    }
+    p {
+      margin-top: 0;
+    }
+  }
+}
+
+hr {
+  height: 1px;
+  border-top: none;
+  margin: 0;
+}
