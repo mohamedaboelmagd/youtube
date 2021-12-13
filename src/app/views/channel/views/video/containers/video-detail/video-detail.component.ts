@@ -1,5 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 import { debounceTime, filter, switchMap, tap } from 'rxjs/operators';
@@ -13,8 +18,7 @@ import * as fromServices from '../../services';
   styleUrls: ['./video-detail.component.scss'],
 })
 export class VideoDetailComponent implements OnInit, OnDestroy {
-  public form: FormGroup;
-
+  form: FormGroup;
 
   video$: Observable<fromModels.IVideo>;
   isFav = false;
@@ -32,7 +36,7 @@ export class VideoDetailComponent implements OnInit, OnDestroy {
     // this.rating3 = 0;
     this.form = this.fb.group({
       rating: ['', Validators.required],
-    })
+    });
   }
 
   ngOnInit(): void {
@@ -57,27 +61,34 @@ export class VideoDetailComponent implements OnInit, OnDestroy {
           );
         }
       }),
-      tap(video => {
+      tap((video) => {
         this.isFav = video?.isFavorite || false;
-        this.ratingControl?.patchValue(video?.rating)
+        this.ratingControl?.patchValue(video?.rating);
       })
     );
     this.subscription.add(
-      this.ratingControl.valueChanges.pipe(debounceTime(500), filter(rating => !!rating), switchMap(rating => this.videoService.updateVideo(videoId, { rating }))).subscribe()
-    )
+      this.ratingControl.valueChanges
+        .pipe(
+          debounceTime(500),
+          filter((rating) => !!rating),
+          switchMap((rating) =>
+            this.videoService.updateVideo(videoId, { rating })
+          )
+        )
+        .subscribe()
+    );
   }
 
   ngOnDestroy(): void {
     //Called once, before the instance is destroyed.
     //Add 'implements OnDestroy' to the class.
-    this.subscription?.unsubscribe()
+    this.subscription?.unsubscribe();
   }
 
   toggleFav() {
     const videoId = this.activatedRoute.snapshot.paramMap?.get(
       'videoId'
     ) as string;
-    this.videoService.updateVideo(videoId, { isFavorite: !this.isFav })
+    this.videoService.updateVideo(videoId, { isFavorite: !this.isFav });
   }
-
 }

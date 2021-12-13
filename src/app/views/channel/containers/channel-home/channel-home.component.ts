@@ -1,6 +1,15 @@
-import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-import { catchError, filter, switchMap, take, tap } from 'rxjs/operators';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AbstractControl, FormBuilder, FormGroup } from '@angular/forms';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+import { Subscription } from 'rxjs';
+import {
+  catchError,
+  debounceTime,
+  filter,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
 
 import * as fromModels from '../../models';
 import * as fromServices from '../../services';
@@ -10,44 +19,87 @@ import * as fromServices from '../../services';
   templateUrl: './channel-home.component.html',
   styleUrls: ['./channel-home.component.scss'],
 })
-export class ChannelHomeComponent implements OnInit {
+export class ChannelHomeComponent implements OnInit, OnDestroy {
+  form: FormGroup;
+
+  channelId: string;
+
   pending: boolean = false;
   error: boolean;
-  channel$: Observable<fromModels.IChannelList>;
+  channel: fromModels.IChannelList;
 
-  constructor(private channelService: fromServices.ChannelService) { }
+  dataSource: MatTableDataSource<fromModels.IVideo> = new MatTableDataSource();
+  @ViewChild(MatSort) matSort: MatSort;
+
+  sort: string;
+  sortType: 'asc' | 'desc';
+
+  initColumns: any[] = [
+    { name: 'imgURL', display: 'img' },
+    { name: 'title', display: 'title' }, // add `.name` to name attr if you want to use dynamic mapping for columns
+    { name: 'publishedAt', display: 'Published At' },
+    { name: 'id', display: 'Id' },
+  ];
+  displayedColumns: any[] = this.initColumns.map((col) => col.name);
+
+  subscription = new Subscription();
+
+  get filterControl() {
+    return this.form.get('filter') as AbstractControl;
+  }
+
+  constructor(
+    private channelService: fromServices.ChannelService,
+    private fb: FormBuilder
+  ) {
+    this.form = this.fb.group({
+      filter: [''],
+    });
+  }
 
   ngOnInit(): void {
     // this.channel$ = this.channelService.loadChannel('UC_x5XG1OV2P6uZZ5FSM9Ttw');
 
-    // const channelId = 'UC_x5XG1OV2P6uZZ5FSM9Ttw';
-    const channelId = 'UC-1l0Ew_jMorWJ0d9RWk5wg';
-    this.channel$ = this.channelService.exists(channelId).pipe(
-      take(1),
-      switchMap((exist) => {
-        console.log(exist);
-        if (exist) {
-          return this.channelService.loadChannelList(channelId);
-        } else {
-          return this.channelService.loadChannel(channelId).pipe(
-            filter((res) => !!res),
-            tap((res) => this.channelService.addItem(channelId, res))
-          );
-        }
-      }),
-    );
-
+    this.channelId = 'UCx4a8EMmXx-6RuJlyAKASoQ';
+    // 'UCXVDBeCwro9FqNeBr41Q2BQ'
+    //'UCee3jrGUdb2ovrE7v4ncH3Q'
+    // 'UC-1l0Ew_jMorWJ0d9RWk5wg';
     // UC_x5XG1OV2P6uZZ5FSM9Ttw;
     // UUTI5S0PqpgB0DbYgcgRU6QQ;
-    // UC-1l0Ew_jMorWJ0d9RWk5wg
-    // if (localStorage.getItem('UC_x5XG1OV2P6uZZ5FSM9Ttw')) {
-    //   this.playlist = JSON.parse(
-    //     localStorage.getItem('UC_x5XG1OV2P6uZZ5FSM9Ttw') as string
-    //   );
-    //   console.log(this.playlist);
-    // } else {
-    //   this.getPlaylist('UC_x5XG1OV2P6uZZ5FSM9Ttw');
-    // }
+    this.pending = true;
+    this.subscription.add(
+      this.channelService
+        .exists(this.channelId)
+        .pipe(
+          // take(1),
+          switchMap((exist) => {
+            console.log(exist);
+            if (exist) {
+              return this.channelService.loadChannelList(this.channelId);
+            } else {
+              return this.channelService.loadChannel(this.channelId).pipe(
+                filter((res) => !!res),
+                tap((res) => this.channelService.addItem(this.channelId, res))
+              );
+            }
+          }),
+          tap((channel) => {
+            this.dataSource = new MatTableDataSource(channel.videos);
+            this.channel = channel;
+            this.pending = false;
+          })
+        )
+        .subscribe()
+    );
+    this.subscription.add(
+      this.filterControl?.valueChanges
+        ?.pipe(debounceTime(1000))
+        .subscribe((filter) => this.applyFilter(filter))
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
   }
 
   loadPrevious(channel: fromModels.IChannelList) {
@@ -65,52 +117,80 @@ export class ChannelHomeComponent implements OnInit {
     this.pending = true;
     this.error = false;
     // if (this.playlist) {
-    const pageToken = direction === fromModels.PageDirection.NEXT ? channel.nextPageToken : channel.prevPageToken
-    this.channel$ = this.channelService.exists(channel?.id, pageToken).pipe(
-      switchMap((exist) => {
-        console.log(exist);
-        if (exist) {
-          return this.channelService.loadChannelList(channel.id, pageToken);
-        } else {
-          return this.channelService.movePage(channel, direction).pipe(
-            filter((res) => !!res),
-            tap((res) => this.channelService.addItem(channel.id, res, pageToken))
-          );
-        }
-      }),
-      tap((result) => {
-        this.pending = false;
-      }),
-      catchError((err) => {
-        console.log(err);
-        this.pending = false;
-        this.error = true;
-        throw err;
-      })
+    const pageToken =
+      direction === fromModels.PageDirection.NEXT
+        ? channel.nextPageToken
+        : channel.prevPageToken;
+    this.subscription.add(
+      this.channelService
+        .exists(channel?.id, pageToken)
+        .pipe(
+          switchMap((exist) => {
+            console.log(exist);
+            if (exist) {
+              return this.channelService.loadChannelList(channel.id, pageToken);
+            } else {
+              return this.channelService.movePage(channel, direction).pipe(
+                filter((res) => !!res),
+                tap((res) =>
+                  this.channelService.addItem(channel.id, res, pageToken)
+                )
+              );
+            }
+          }),
+          tap((result) => {
+            this.dataSource = new MatTableDataSource(result.videos);
+            this.channel = result;
+            this.pending = false;
+          }),
+          catchError((err) => {
+            console.log(err);
+            this.pending = false;
+            this.error = true;
+            throw err;
+          })
+        )
+        .subscribe()
     );
+  }
 
-    // this.channel$ = this.channelService.movePage(channel, direction).pipe(
-    //   tap((result) => {
-    //     this.pending = false;
-    //   }),
-    //   catchError((err) => {
-    //     console.log(err);
-    //     this.pending = false;
-    //     this.error = true;
-    //     throw err;
-    //   })
-    // );
-    // .subscribe(
-    //   (playList) => {
-    //     this.playlist = playList;
-    //     this.pending = false;
-    //   },
-    //   (err) => {
-    //     this.pending = false;
-    //     this.error = true;
-    //     console.log(err);
-    //   }
-    // );
-    // }
+  sortVideos({ active, direction }: { active: string; direction: any }) {
+    this.pending = true;
+    this.error = false;
+    this.sortType = direction;
+    this.sort = active;
+    this.subscription.add(
+      this.channelService
+        .loadChannel(
+          this.channelId,
+          '',
+          '',
+          (direction?.toUpperCase() as 'ASC' | 'DESC') === 'ASC' ? active : ''
+        )
+        .pipe(
+          tap((channel) => {
+            this.dataSource = new MatTableDataSource(channel.videos);
+            this.channel = channel;
+            this.pending = false;
+          })
+        )
+        .subscribe()
+    );
+  }
+
+  applyFilter(filterValue: string) {
+    filterValue = filterValue?.trim()?.toLowerCase();
+    this.subscription.add(
+      this.channelService
+        .loadChannel(this.channelId, '', filterValue)
+        .pipe(
+          tap((channel) => {
+            this.dataSource = new MatTableDataSource(channel.videos);
+            this.channel = channel;
+            this.pending = false;
+          })
+        )
+        .subscribe()
+    );
   }
 }
