@@ -1,7 +1,7 @@
 {
   "hosting": {
     "site": "u-tube",
-    "public": "public",
+    "public": "dist/inmobly",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {

@@ -28,6 +28,9 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
   error: boolean;
   channel: fromModels.IChannelList;
 
+  subscription = new Subscription();
+
+  // attributes for mat-table
   dataSource: MatTableDataSource<fromModels.IVideo> = new MatTableDataSource();
   @ViewChild(MatSort) matSort: MatSort;
 
@@ -42,8 +45,6 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
   ];
   displayedColumns: any[] = this.initColumns.map((col) => col.name);
 
-  subscription = new Subscription();
-
   get filterControl() {
     return this.form.get('filter') as AbstractControl;
   }
@@ -52,9 +53,7 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
     private channelService: fromServices.ChannelService,
     private fb: FormBuilder
   ) {
-    this.form = this.fb.group({
-      filter: [''],
-    });
+    this.form = this.fb.group({ filter: [''] });
   }
 
   ngOnInit(): void {
@@ -110,47 +109,13 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
     this.paginateChannel(channel, fromModels.PageDirection.NEXT);
   }
 
-  private paginateChannel(
-    channel: fromModels.IChannelList,
-    direction: fromModels.PageDirection
-  ) {
-    this.pending = true;
-    this.error = false;
-    const pageToken =
-      direction === fromModels.PageDirection.NEXT
-        ? channel.nextPageToken
-        : channel.prevPageToken;
-    this.subscription.add(
-      this.channelService
-        .exists(channel?.id, pageToken)
-        .pipe(
-          switchMap((exist) => {
-            if (exist) {
-              return this.channelService.loadChannelList(channel.id, pageToken);
-            } else {
-              return this.channelService.movePage(channel, direction).pipe(
-                filter((res) => !!res),
-                tap((res) =>
-                  this.channelService.addItem(channel.id, res, pageToken)
-                )
-              );
-            }
-          }),
-          tap((result) => {
-            this.dataSource = new MatTableDataSource(result.videos);
-            this.channel = result;
-            this.pending = false;
-          }),
-          catchError((err) => {
-            this.pending = false;
-            this.error = true;
-            throw err;
-          })
-        )
-        .subscribe()
-    );
-  }
-
+  /**
+   * sort by title or by published at
+   * in service we map published at to 'asc' and 'desc'
+   *
+   * @param {{ active: string; direction: any }} { active, direction }
+   * @memberof ChannelHomeComponent
+   */
   sortVideos({ active, direction }: { active: string; direction: any }) {
     this.pending = true;
     this.error = false;
@@ -180,7 +145,7 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
     );
   }
 
-  applyFilter(filterValue: string) {
+  private applyFilter(filterValue: string) {
     this.pending = true;
     this.error = false;
     filterValue = filterValue?.trim()?.toLowerCase();
@@ -191,6 +156,55 @@ export class ChannelHomeComponent implements OnInit, OnDestroy {
           tap((channel) => {
             this.dataSource = new MatTableDataSource(channel.videos);
             this.channel = channel;
+            this.pending = false;
+          }),
+          catchError((err) => {
+            this.pending = false;
+            this.error = true;
+            throw err;
+          })
+        )
+        .subscribe()
+    );
+  }
+
+  /**
+   * method of getting next page or previous page
+   *
+   * @private
+   * @param {fromModels.IChannelList} channel
+   * @param {fromModels.PageDirection} direction
+   * @memberof ChannelHomeComponent
+   */
+  private paginateChannel(
+    channel: fromModels.IChannelList,
+    direction: fromModels.PageDirection
+  ) {
+    this.pending = true;
+    this.error = false;
+    const pageToken =
+      direction === fromModels.PageDirection.NEXT
+        ? channel.nextPageToken
+        : channel.prevPageToken;
+    this.subscription.add(
+      this.channelService
+        .exists(channel?.id, pageToken)
+        .pipe(
+          switchMap((exist) => {
+            if (exist) {
+              return this.channelService.loadChannelList(channel.id, pageToken);
+            } else {
+              return this.channelService.movePage(channel, direction).pipe(
+                filter((res) => !!res),
+                tap((res) =>
+                  this.channelService.addItem(channel.id, res, pageToken)
+                )
+              );
+            }
+          }),
+          tap((result) => {
+            this.dataSource = new MatTableDataSource(result.videos);
+            this.channel = result;
             this.pending = false;
           }),
           catchError((err) => {
