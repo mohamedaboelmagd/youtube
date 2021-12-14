@@ -1,0 +1,100 @@
+<nav>
+  <h5>Lorem</h5>
+  <mat-form-field class="example-full-width" appearance="fill">
+    <mat-label>Channel Id</mat-label>
+    <input matInput [(ngModel)]="channelId" placeholder="Add here channel Id" />
+  </mat-form-field>
+  <button mat-icon-button (click)="search()">
+    <mat-icon>search</mat-icon>
+  </button>
+</nav>
+<div *ngIf="pending; else loaded" class="loader">
+  <mat-spinner class="margin" [diameter]="50" [strokeWidth]="5"></mat-spinner>
+</div>
+<ng-template #loaded>
+  <div class="container">
+    <mat-form-field [formGroup]="form" appearance="standard">
+      <mat-label>Filter</mat-label>
+      <input matInput formControlName="filter" placeholder="Ex. ium" #input />
+    </mat-form-field>
+    <table
+      class="table"
+      *ngIf="channel?.videos?.length"
+      mat-table
+      [dataSource]="dataSource"
+      multiTemplateDataRows
+      matSort
+      [matSortActive]="sort"
+      [matSortDirection]="sortType"
+      (matSortChange)="sortVideos($event)"
+    >
+      <ng-container matColumnDef="imgURL">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let element">
+          <img class="table__img" [src]="element?.imgURL" />
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="title">Title</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element?.title }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="publishedAt">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="publishedAt">
+          Published At
+        </th>
+        <td mat-cell *matCellDef="let element">
+          {{ element?.publishedAt | date }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let element">
+          <button
+            *ngIf="element?.id"
+            type="button"
+            mat-stroked-button
+            color="primary"
+            [routerLink]="['/', element?.id]"
+          >
+            Details
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let element; columns: displayedColumns"
+        class="group-element-row"
+      ></tr>
+    </table>
+
+    <div class="pagination">
+      <button
+        *ngIf="channel?.prevPageToken"
+        type="button"
+        mat-icon-button
+        (click)="loadPrevious(channel)"
+      >
+        <mat-icon>arrow_left</mat-icon>
+      </button>
+      <button
+        *ngIf="channel?.nextPageToken"
+        type="button"
+        mat-icon-button
+        (click)="loadNext(channel)"
+      >
+        <mat-icon>arrow_right</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="channel?.videos?.length === 0 || error" class="container">
+    <h4 *ngIf="channel?.videos?.length === 0 && !error" class="no-result">
+      No videos here.
+    </h4>
+    <h4 *ngIf="error" class="no-result invalid">Something error</h4>
+  </div>
+</ng-template>
